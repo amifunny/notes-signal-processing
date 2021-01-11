@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>BetterEd Music</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/style.css">
+</head>
+<body>
+
+	<div>
+		<div>
+			<!-- method="POST" action="/process-notes"  -->
+			<form id="music-file-form" enctype="multipart/form-data">
+				<input id="music-file-upload" class="music-file-upload" type="file" name="file">
+				<button id="music-file-submit" class="music-file-submit">
+					Give me notes
+				</button>
+			</form>
+		</div>
+
+		<div class="player-div">
+			<audio id="upload-player" controls>
+				<source src="" id="upload-player-src">
+				<track src="asdas" id="upload-player-track" kind="captions" label="Notes info" default></track>
+				Your browser does not support the audio tag.
+			</audio>
+		</div>
+
+		<audio controls>
+			<source src="http://treehouse-code-samples.s3.amazonaws.com/html-video-and-audio/bridge-audio.mp3" type="audio/mp3">
+			<track label="English" kind="captions" srclang="en" src="/static/temp/sample.vtt" default>
+		</audio>
+
+	</div>	
+
+	<script src="/static/js/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript">
+		
+		$(function() {
+		    $('#music-file-form').submit(function(e) {
+
+		    	e.preventDefault();
+		        var formData = new FormData(this);
+		        var uploadedFile = $('#music-file-upload')[0];
+
+		        allowMusicPlay(uploadedFile,"asdhash.vtt")
+
+		        $.ajax({
+		            type: 'POST',
+		            url: '/process-notes',
+		            data: formData,
+		            contentType: false,
+		            dataType: 'json',
+		            cache: false,
+		            processData: false,
+		            success: function(data){
+		            	console.log(data.notesCaptionFile)
+		            	allowMusicPlay(data.notesCaptionFile)
+		            },
+		        });
+		    });
+		});
+
+		function allowMusicPlay(trackFilename) {
+			console.log("allowMusic");
+		    // $("#upload-player-src").attr("src", URL.createObjectURL(file));
+		    $("#upload-player-track").attr("src", trackFilename);
+		    document.getElementById("upload-player").load();
+		}
+
+		function resetMusicPlay() {
+			console.log("resetMusic");
+		    $("#upload-player-src").attr("src", URL.createObjectURL(this.files[0]) );
+		    $("#upload-player-track").attr("src", "" );
+		    document.getElementById("upload-player").load();
+		}
+
+		document.getElementById("music-file-upload").addEventListener("change", resetMusicPlay, false);
+
+
+	</script>
+</body>
+</html>
+
+

@@ -1,0 +1,14 @@
+.music-file-upload{
+	border:2px solid teal;
+	padding: 1rem 0.5rem
+}
+
+.music-file-submit{
+	padding: 1.2rem 0.5rem;
+	border: 2px solid teal;
+	cursor: pointer;
+}
+
+.player-div{
+	margin-top: 1rem;
+}
