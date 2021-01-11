@@ -17,24 +17,15 @@ def after_request(response):
     return response
 
 app.config["TEMPLATES_AUTO_RELOAD"]=True
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 app.secret_key='secretkey'
 
 @app.route('/')
 def home():
 	return render_template('home.html')
 
-
-# @app.route('/caption/<caption_filename>',methods=["GET","POST"])
-# def server_caption(caption_filename):
-# 	print("Caption wale m")
-# 	resp = Response(response=send_from_directory("/static/temp",
-# 	 filename=caption_filename, as_attachment=True),
-#                     status=200,
-#                     mimetype="text/vtt")
-# 	return resp
-
 def get_timestamp_str(raw_seconds):
+	# Prepare time stamp for vtt standard
 
 	raw_seconds = round(raw_seconds, 3)
 	seconds = raw_seconds%60
@@ -60,37 +51,36 @@ def process_notes():
 	f0, voiced_flag, voiced_probs = librosa.pyin(
 										y, sr=sr, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7')
 									)
-	f0[np.isnan(f0)] = 1.0
-	music_notes = librosa.hz_to_note(f0)
-	
+	# To remove "nan" from `f0`
+	f0[ voiced_flag==False ] = 1.0
+	music_notes = np.asarray( librosa.hz_to_note(f0) )
+	# Add dashes for no note detection
+	music_notes[ voiced_flag==False ] = "--"
+	music_notes = music_notes.tolist()
+
 	# Writing VTT file
 	time_gap = music_duration/len(music_notes)
 	start_time = 0
 
 	vtt_filename = f'{TMP_FOLDER}{uuid.uuid4().hex}.vtt'
-	# vtt_filename = "asjdhk.vtt"
 	with open(vtt_filename,'w+',encoding='utf8') as file:
+		
+		# Add this tag at beginning
 		file.write("WEBVTT")
 		for note in music_notes:
 			end_time = start_time+time_gap
 
 			start_timestr = get_timestamp_str( start_time )
 			end_timestr = get_timestamp_str( end_time )
-			# print(f'\n{start_timestr} --> {end_timestr}\n{note}' )
 			time_caption = f'\n\n{start_timestr} --> {end_timestr}\n{note}'
-			print(time_caption)
 			file.write(time_caption)
 
 			start_time = end_time
 
-	# print(f'Time gap - {time_gap}')
-	# print(f'Intervals - {len(music_notes)}')
-	print(vtt_filename)
 	return jsonify({
 		'notesCaptionFile': vtt_filename
 		})
 
 
 if __name__ == '__main__':
-    # Threaded option to enable multiple instances for multiple user access support
     app.run(threaded=True, port=5000)
