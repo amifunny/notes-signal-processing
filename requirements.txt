@@ -1,4 +1,3 @@
-gunicorn
 flask
 librosa
 numpy
